@@ -1,14 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 // TypeScript
-export type EmployeeType = Document & {
+export interface IEmployee extends Document {
   employeeName: string;
   phone: string;
   role: string;
-  health_insurance: boolean;
-  weekly_payroll: number;
+  healthInsurance: boolean;
+  payroll: number;
   branch: string;
-};
+}
 
 // Schema para mongoose
 const EmployeeSchema: Schema = new Schema(
@@ -27,11 +27,11 @@ const EmployeeSchema: Schema = new Schema(
       require,
       trim: true,
     },
-    health_insurance: {
+    healthInsurance: {
       type: Boolean,
       required: true,
     },
-    weekly_payroll: {
+    payroll: {
       type: Number,
       required: true,
       min: 0,
@@ -48,5 +48,5 @@ const EmployeeSchema: Schema = new Schema(
 );
 
 // Conectar con Mongoose
-const Employee = mongoose.model<EmployeeType>("Employee", EmployeeSchema);
+const Employee = mongoose.model<IEmployee>("Employee", EmployeeSchema);
 export default Employee;
