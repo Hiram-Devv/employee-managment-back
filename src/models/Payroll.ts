@@ -1,9 +1,21 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
+
+const payrollStatus = {
+  PENDING: "pending",
+  IN_PROGRESS: "inProgress",
+  COMPLETED: "completed",
+} as const;
+
+export type PayrollStatus = (typeof payrollStatus)[keyof typeof payrollStatus];
 
 export interface IPayroll extends Document {
-  dateRange: Date;
+  employee: Types.ObjectId;
+  dateRange: {
+    start: Date;
+    end: Date;
+  };
   employeeName: string;
-  employeeRole: string;
+  role: string;
   baseSalary: number;
   dailySalary: number;
   daysWorked: number;
@@ -15,20 +27,37 @@ export interface IPayroll extends Document {
   healthInsurance: number;
   incentive: number;
   total: number;
+  status: PayrollStatus;
 }
 
 export const PayrollSchema: Schema = new Schema(
   {
-    dateRange: {
-      type: Date,
+    employee: {
+      type: Types.ObjectId,
+      ref: "Employee",
       required: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(payrollStatus),
+      default: payrollStatus.PENDING,
+    },
+    dateRange: {
+      start: {
+        type: Date,
+        required: true,
+      },
+      end: {
+        type: Date,
+        required: true,
+      },
     },
     employeeName: {
       type: String,
       required: true,
       trim: true,
     },
-    employeeRole: {
+    role: {
       type: String,
       required: true,
       trim: true,

@@ -33,8 +33,7 @@ export class EmployeeController {
   ): Promise<void> => {
     const { id } = req.params;
     try {
-      const employee = await Employee.findById(id);
-
+      const employee = await Employee.findById(id).populate("payroll");
       if (!employee) {
         const error = new Error("Empleado no encontrado");
         res.status(404).json({ error: error.message });

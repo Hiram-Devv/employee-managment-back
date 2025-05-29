@@ -1,4 +1,5 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, PopulatedDoc, Types } from "mongoose";
+import { IPayroll } from "./Payroll";
 
 // TypeScript
 export interface IEmployee extends Document {
@@ -6,47 +7,47 @@ export interface IEmployee extends Document {
   phone: string;
   role: string;
   healthInsurance: boolean;
-  payroll: number;
+  payroll: PopulatedDoc<IPayroll & Document>[];
   branch: string;
 }
 
-// Schema para mongoose
 const EmployeeSchema: Schema = new Schema(
   {
     employeeName: {
       type: String,
-      require: true,
+      required: true,
       trim: true,
     },
     phone: {
-      type: Number,
+      type: String,
       required: true,
     },
     role: {
       type: String,
-      require,
+      required: true,
       trim: true,
     },
     healthInsurance: {
       type: Boolean,
       required: true,
     },
-    payroll: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
     branch: {
       type: String,
       required: true,
       trim: true,
     },
+    payroll: [
+      {
+        type: Types.ObjectId,
+        ref: "Payroll",
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
 
-// Conectar con Mongoose
+// Conect with Mongoose
 const Employee = mongoose.model<IEmployee>("Employee", EmployeeSchema);
 export default Employee;
