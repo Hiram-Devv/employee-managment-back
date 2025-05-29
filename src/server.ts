@@ -5,10 +5,12 @@ import employeeRoutes from "./routes/employeeRoutes";
 
 dotenv.config();
 
+// Connect to database
 connectDB();
 
 const app = express();
 
+// Middleware
 app.use(express.json());
 
 // Routes
