@@ -48,12 +48,24 @@ router.delete(
 /** Routes for Payroll */
 
 router.post(
+  "/:employeeId/payrolls/calculate",
+  employeeExists,
+  body("baseSalary")
+    .notEmpty().withMessage("El salario base es requerido")
+    .isNumeric().withMessage("El salario base debe ser un número")
+    .custom((value) => value > 0).withMessage("El salario base debe ser mayor a 0"),
+  handleInputErrors,
+  PayrollController.calculatePayrollValues
+);
+
+router.post(
   "/:employeeId/payrolls",
   employeeExists,
   payrollValidationSchema,
   handleInputErrors,
   PayrollController.createPayroll
 );
+
 router.get(
   "/:employeeId/payrolls",
   employeeExists,

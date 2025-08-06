@@ -1,11 +1,49 @@
 import type { Request, Response } from "express";
 import Payroll from "../models/Payroll";
+import { calculatePayrollValues, calculateTotal } from "../utils/payrollCalculations";
 
 export class PayrollController {
+  static calculatePayrollValues = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { baseSalary } = req.body;
+      
+      if (!baseSalary || baseSalary <= 0) {
+        res.status(400).json({ error: "El salario base es requerido y debe ser mayor a 0" });
+        return;
+      }
+
+      const calculatedValues = calculatePayrollValues(baseSalary);
+      res.json(calculatedValues);
+    } catch (error) {
+      res.status(500).json({ error: "Hubo un error al calcular los valores" });
+    }
+  };
+
   static createPayroll = async (req: Request, res: Response): Promise<void> => {
     try {
-      const payroll = new Payroll(req.body);
-      payroll.employee = req.employee.id;
+      const { baseSalary, daysWorked, overtimeHours, discount, healthInsurance, incentive } = req.body;
+      
+      // Calcular valores automáticamente
+      const calculatedValues = calculatePayrollValues(baseSalary);
+      
+      // Calcular el total
+      const total = calculateTotal(
+        baseSalary,
+        daysWorked,
+        overtimeHours,
+        calculatedValues.overtimeValue,
+        discount,
+        healthInsurance,
+        incentive
+      );
+
+      const payroll = new Payroll({
+        ...req.body,
+        ...calculatedValues,
+        total,
+        employee: req.employee.id
+      });
+
       req.employee.payroll.push(payroll.id);
       await Promise.allSettled([payroll.save(), req.employee.save()]);
       res.send("Nómina creada correctamente");
@@ -52,20 +90,36 @@ export class PayrollController {
         return;
       }
 
-      // Update all fields
+      const { baseSalary, daysWorked, overtimeHours, discount, healthInsurance, incentive } = req.body;
+      
+      // Recalcular valores si el salario base cambió
+      if (baseSalary && baseSalary !== req.payroll.baseSalary) {
+        const calculatedValues = calculatePayrollValues(baseSalary);
+        req.payroll.dailySalary = calculatedValues.dailySalary;
+        req.payroll.overtimeValue = calculatedValues.overtimeValue;
+      }
+
+      // Actualizar campos
       req.payroll.employeeName = req.body.employeeName;
       req.payroll.role = req.body.role;
-      req.payroll.baseSalary = req.body.baseSalary;
-      req.payroll.dailySalary = req.body.dailySalary;
-      req.payroll.daysWorked = req.body.daysWorked;
-      req.payroll.weeklySalary = req.body.weeklySalary;
-      req.payroll.overtimeValue = req.body.overtimeValue;
-      req.payroll.overtimeHours = req.body.overtimeHours;
-      req.payroll.overtime = req.body.overtime;
-      req.payroll.discount = req.body.discount;
-      req.payroll.healthInsurance = req.body.healthInsurance;
-      req.payroll.incentive = req.body.incentive;
-      req.payroll.total = req.body.total;
+      req.payroll.baseSalary = baseSalary;
+      req.payroll.daysWorked = daysWorked;
+      req.payroll.overtimeHours = overtimeHours;
+      req.payroll.discount = discount;
+      req.payroll.healthInsurance = healthInsurance;
+      req.payroll.incentive = incentive;
+
+      // Recalcular el total
+      req.payroll.total = calculateTotal(
+        req.payroll.baseSalary,
+        req.payroll.daysWorked,
+        req.payroll.overtimeHours,
+        req.payroll.overtimeValue,
+        req.payroll.discount,
+        req.payroll.healthInsurance,
+        req.payroll.incentive
+      );
+
       // Update dateRange if it comes in the body
       if (req.body.dateRange) {
         req.payroll.dateRange = {
