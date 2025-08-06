@@ -15,9 +15,6 @@ export const employeeValidationSchema = [
   body("healthInsurance")
     .notEmpty()
     .withMessage("El seguro del empleado es obligatorio"),
-  body("weeklyPayroll")
-    .notEmpty()
-    .withMessage("La nómina del empleado es obligatoria"),
   body("branch")
     .notEmpty()
     .withMessage("La sucursal del empleado es obligatoria"),

@@ -7,6 +7,7 @@ export class EmployeeController {
     res: Response
   ): Promise<void> => {
     const employee = new Employee(req.body);
+
     try {
       await employee.save();
       res.send("Empleado creado correctamente");
@@ -51,12 +52,19 @@ export class EmployeeController {
   ): Promise<void> => {
     const { id } = req.params;
     try {
-      const employee = await Employee.findByIdAndUpdate(id, req.body);
+      const employee = await Employee.findById(id);
       if (!employee) {
         const error = new Error("Empleado no encontrado");
         res.status(404).json({ error: error.message });
         return;
       }
+      // Update all fields
+      employee.employeeName = req.body.employeeName;
+      employee.phone = req.body.phone;
+      employee.role = req.body.role;
+      employee.healthInsurance = req.body.healthInsurance;
+      employee.branch = req.body.branch;
+
       await employee.save();
       res.send("Empleado actualizado");
     } catch (error) {
